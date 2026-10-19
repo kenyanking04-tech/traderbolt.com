@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TradeFlow · $5 deposit trading</title>
+  <!-- Font & icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0b0e14;
+      color: #e6edf3;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    /* main app container */
+    .app {
+      max-width: 1320px;
+      width: 100%;
+      background: #0f131c;
+      border-radius: 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.03);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(2px);
+    }
+
+    /* header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid #1e2630;
+      background: #0f131c;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-weight: 700;
+      font-size: 1.4rem;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+
+    .logo i {
+      color: #4c9aff;
+      font-size: 1.8rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .balance-chip {
+      background: #1b232e;
+      padding: 0.5rem 1.2rem;
+      border-radius: 3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 500;
+      border: 1px solid #2a3341;
+      font-size: 0.95rem;
+    }
+
+    .balance-chip i {
+      color: #4c9aff;
+    }
+
+    .balance-amount {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      background: #2a3341;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #9aa9bb;
+      border: 1px solid #3b4553;
+    }
+
+    /* main layout */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 0;
+      flex: 1;
+    }
+
+    /* left panel (chart & market) */
+    .left-panel {
+      padding: 1.8rem 2rem;
+      border-right: 1px solid #1e2630;
+      background: #0f131c;
+    }
+
+    .pair-selector {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .pair {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .pair h2 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pair h2 span {
+      background: #1b232e;
+      font-size: 0.85rem;
+      padding: 0.25rem 0.8rem;
+      border-radius: 2rem;
+      font-weight: 500;
+      color: #8d9db0;
+    }
+
+    .change-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      background: #1b232e;
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+      color: #26a69a;
+    }
+
+    .change-badge i {
+      font-size: 0.8rem;
+    }
+
+    /* chart */
+    .chart-container {
+      background: #121822;
+      border-radius: 1.5rem;
+      padding: 1rem 0.5rem 0.5rem 0.5rem;
+      border: 1px solid #1e2630;
+      margin-bottom: 1.8rem;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    }
+
+    #chartCanvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 1rem;
+      background: transparent;
+    }
+
+    /* order book / market stats */
+    .market-stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.8rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      background: #121822;
+      padding: 0.8rem 1.4rem;
+      border-radius: 2rem;
+      border: 1px solid #1e2630;
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .stat-label {
+      color: #8d9db0;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    /* trade panel */
+    .trade-panel {
+      background: #121822;
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      border: 1px solid #1e2630;
+    }
+
+    .trade-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: #0b0e14;
+      padding: 0.35rem;
+      border-radius: 3rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #1e2630;
+    }
+
+    .trade-tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 0.7rem 0;
+      border-radius: 2.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #8d9db0;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .trade-tab.active {
+      background: #1e2a3a;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .trade-tab.buy-tab.active {
+      background: #1a3b3a;
+      color: #26a69a;
+    }
+
+    .trade-tab.sell-tab.active {
+      background: #3b1e26;
+      color: #ef5350;
+    }
+
+    .input-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: #8d9db0;
+      margin-bottom: 0.45rem;
+      font-weight: 500;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      background: #0b0e14;
+      border-radius: 1rem;
+      padding: 0.2rem;
+      border: 1px solid #1e2630;
+    }
+
+    .input-row input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 0.9rem 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #ffffff;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .input-row input::placeholder {
+      color: #4d5a6b;
+      font-weight: 400;
+    }
+
+    .input-row span {
+      padding: 0 1rem;
+      color: #8d9db0;
+      font-weight: 500;
+    }
+
+    .quick-amounts {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 0.7rem;
+    }
+
+    .quick-btn {
+      background: #1b232e;
+      border: 1px solid #2a3341;
+      padding: 0.4rem 0.9rem;
+      border-radius: 2rem;
+      color: #b1c2d6;
+      font-weight: 500;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.1s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .quick-btn:hover {
+      background: #2a3341;
+      color: white;
+    }
+
+    .trade-btn {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 1.2rem;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 1rem;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+
+    .trade-btn.buy {
+      background: #26a69a;
+      color: #0b0e14;
+      box-shadow: 0 8px 18px rgba(38, 166, 154, 0.2);
+    }
+
+    .trade-btn.sell {
+      background: #ef5350;
+      color: #0b0e14;
+      box-shadow: 0 8px 18px rgba(239, 83, 80, 0.15);
+    }
+
+    .trade-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      box-shadow: none;
+      background: #3b4553;
+      color: #8d9db0;
+    }
+
+    .trade-btn.buy:hover:not(:disabled) {
+      background: #2bbbad;
+      transform: scale(1.01);
+    }
+
+    .trade-btn.sell:hover:not(:disabled) {
+      background: #f0615e;
+      transform: scale(1.01);
+    }
+
+    /* right panel (sidebar) */
+    .right-panel {
+      background: #0f131c;
+      padding: 1.8rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+
+    /* deposit card */
+    .deposit-card {
+      background: linear-gradient(135deg, #18202c 0%, #0f131c 100%);
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      border: 1px solid #2a3341;
+      box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.6);
+    }
+
+    .deposit-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .deposit-header i {
+      font-size: 1.6rem;
+      color: #4c9aff;
+      background: rgba(76, 154, 255, 0.1);
+      padding: 0.5rem;
+      border-radius: 1rem;
+    }
+
+    .deposit-header h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .deposit-card p {
+      color: #9aa9bb;
+      font-size: 0.9rem;
+      margin-bottom: 1.2rem;
+      line-height: 1.5;
+    }
+
+    .deposit-amount {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+
+    .deposit-amount span {
+      font-size: 1rem;
+      font-weight: 400;
+      color: #8d9db0;
+      margin-left: 0.3rem;
+    }
+
+    .deposit-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+    }
+
+    .badge {
+      padding: 0.3rem 0.8rem;
+      border-radius: 2rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .badge.success {
+      background: rgba(38, 166, 154, 0.15);
+      color: #26a69a;
+      border: 1px solid rgba(38, 166, 154, 0.3);
+    }
+
+    .badge.warning {
+      background: rgba(255, 152, 0, 0.12);
+      color: #ffb74d;
+      border: 1px solid rgba(255, 152, 0, 0.25);
+    }
+
+    .deposit-btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: #4c9aff;
+      border: none;
+      border-radius: 1rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #0b0e14;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .deposit-btn:hover {
+      background: #6aaeff;
+    }
+
+    .deposit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #2a3341;
+      color: #8d9db0;
+    }
+
+    /* portfolio summary */
+    .portfolio {
+      background: #121822;
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      border: 1px solid #1e2630;
+    }
+
+    .portfolio h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #8d9db0;
+      margin-bottom: 1rem;
+      letter-spacing: 0.02em;
+    }
+
+    .portfolio-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid #1e2630;
+    }
+
+    .portfolio-item:last-child {
+      border-bottom: none;
+    }
+
+    .portfolio-item span:first-child {
+      color: #9aa9bb;
+      font-size: 0.9rem;
+    }
+
+    .portfolio-item span:last-child {
+      font-weight: 600;
+      color: #ffffff;
+      font-size: 0.95rem;
+    }
+
+    .disclaimer {
+      font-size: 0.7rem;
+      color: #5d6b7c;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+    /* toast notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e2a3a;
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 3rem;
+      font-weight: 500;
+      box-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.7);
+      border: 1px solid #3b4a5e;
+      transition: transform 0.25s ease;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast i {
+      color: #4c9aff;
+    }
+
+    /* responsive */
+    @media (max-width: 1000px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+      .left-panel {
+        border-right: none;
+        border-bottom: 1px solid #1e2630;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .header {
+        padding: 1rem 1.2rem;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+      }
+      .left-panel, .right-panel {
+        padding: 1.2rem;
+      }
+      .pair h2 {
+        font-size: 1.4rem;
+      }
+      .market-stats {
+        gap: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- header -->
+    <header class="header">
+      <div class="logo">
+        <i class="fas fa-bolt"></i>
+        <span>TradeFlow</span>
+      </div>
+      <div class="user-info">
+        <div class="balance-chip">
+          <i class="fas fa-wallet"></i>
+          <span>Balance</span>
+          <span class="balance-amount" id="headerBalance">$5.00</span>
+        </div>
+        <div class="avatar">JD</div>
+      </div>
+    </header>
+
+    <!-- main content -->
+    <div class="main-grid">
+      <!-- left panel -->
+      <div class="left-panel">
+        <div class="pair-selector">
+          <div class="pair">
+            <h2>BTC/USD <span>Spot</span></h2>
+          </div>
+          <div class="change-badge">
+            <i class="fas fa-arrow-up"></i> +2.34%
+          </div>
+        </div>
+
+        <!-- chart -->
+        <div class="chart-container">
+          <canvas id="chartCanvas" width="800" height="280" style="width:100%; height:auto;"></canvas>
+        </div>
+
+        <!-- stats -->
+        <div class="market-stats">
+          <div class="stat-item">
+            <span class="stat-label">24h High</span>
+            <span class="stat-value">$68,420</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">24h Low</span>
+            <span class="stat-value">$66,120</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Volume</span>
+            <span class="stat-value">12.4K BTC</span>
+          </div>
+        </div>
+
+        <!-- trade panel -->
+        <div class="trade-panel">
+          <div class="trade-tabs">
+            <button class="trade-tab buy-tab active" data-side="buy">Buy</button>
+            <button class="trade-tab sell-tab" data-side="sell">Sell</button>
+          </div>
+
+          <div class="input-group">
+            <label>Amount (USD)</label>
+            <div class="input-row">
+              <input type="number" id="tradeAmount" value="5.00" min="1" step="0.5" placeholder="0.00">
+              <span>USD</span>
+            </div>
+            <div class="quick-amounts">
+              <button class="quick-btn" data-amount="5">$5</button>
+              <button class="quick-btn" data-amount="10">$10</button>
+              <button class="quick-btn" data-amount="25">$25</button>
+              <button class="quick-btn" data-amount="50">$50</button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>You receive (approx)</label>
+            <div class="input-row" style="background: #0b0e14;">
+              <input type="text" id="receiveAmount" value="0.0000735 BTC" readonly style="color: #8d9db0; font-weight:500;">
+              <span>BTC</span>
+            </div>
+          </div>
+
+          <button class="trade-btn buy" id="tradeBtn" data-side="buy">
+            <i class="fas fa-arrow-up"></i> Buy BTC
+          </button>
+          <div class="disclaimer">Minimum trade $5.00 · 0% commission</div>
+        </div>
+      </div>
+
+      <!-- right panel -->
+      <div class="right-panel">
+        <!-- deposit card -->
+        <div class="deposit-card">
+          <div class="deposit-header">
+            <i class="fas fa-hand-holding-usd"></i>
+            <h3>Start trading</h3>
+          </div>
+          <p>Deposit $5 to unlock full trading and claim your welcome bonus.</p>
+          <div class="deposit-amount">$5.00 <span>USD</span></div>
+          <div class="deposit-status">
+            <span class="badge success" id="depositBadge">Deposited</span>
+            <span style="color:#8d9db0; font-size:0.85rem;">Ready to trade</span>
+          </div>
+          <button class="deposit-btn" id="depositBtn" disabled>
+            <i class="fas fa-check-circle"></i> Deposit active
+          </button>
+          <div class="disclaimer" style="margin-top:1rem;">Funds are simulated for demo</div>
+        </div>
+
+        <!-- portfolio -->
+        <div class="portfolio">
+          <h4>Your portfolio</h4>
+          <div class="portfolio-item">
+            <span>Available cash</span>
+            <span id="availableCash">$5.00</span>
+          </div>
+          <div class="portfolio-item">
+            <span>BTC holdings</span>
+            <span id="btcHoldings">0.00000000 BTC</span>
+          </div>
+          <div class="portfolio-item">
+            <span>Portfolio value</span>
+            <span id="portfolioValue">$5.00</span>
+          </div>
+        </div>
+
+        <!-- demo note -->
+        <div style="margin-top: auto;">
+          <div class="disclaimer" style="text-align: left; font-size: 0.7rem; line-height: 1.6;">
+            <i class="fas fa-shield-alt" style="margin-right: 0.3rem;"></i> This is a demo interface. No real funds are involved. Trade responsibly.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div class="toast" id="toast">
+    <i class="fas fa-info-circle"></i>
+    <span id="toastMessage">Deposit confirmed! You can trade now.</span>
+  </div>
+
+  <script>
+    (function() {
+      // state
+      let balance = 5.00;            // USD
+      let btcHoldings = 0;           // BTC
+      let currentPrice = 68000;      // BTC/USD (approx)
+      let activeSide = 'buy';        // buy or sell
+      const minDeposit = 5.00;
+
+      // DOM elements
+      const headerBalance = document.getElementById('headerBalance');
+      const availableCash = document.getElementById('availableCash');
+      const btcHoldingsEl = document.getElementById('btcHoldings');
+      const portfolioValueEl = document.getElementById('portfolioValue');
+      const tradeAmountInput = document.getElementById('tradeAmount');
+      const receiveAmountInput = document.getElementById('receiveAmount');
+      const tradeBtn = document.getElementById('tradeBtn');
+      const depositBtn = document.getElementById('depositBtn');
+      const depositBadge = document.getElementById('depositBadge');
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+
+      // trade tabs
+      const buyTab = document.querySelector('.buy-tab');
+      const sellTab = document.querySelector('.sell-tab');
+
+      // init chart
+      const canvas = document.getElementById('chartCanvas');
+      const ctx = canvas.getContext('2d');
+      let chartData = [];
+
+      // generate realistic chart data (BTC-like)
+      function generateChartData(points = 60) {
+        const data = [];
+        let price = 66000;
+        for (let i = 0; i < points; i++) {
+          price += (Math.random() - 0.45) * 600;
+          price = Math.max(65000, Math.min(69500, price));
+          data.push(price);
+        }
+        return data;
+      }
+
+      // draw chart
+      function drawChart() {
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        if (chartData.length < 2) return;
+
+        const minVal = Math.min(...chartData) * 0.998;
+        const maxVal = Math.max(...chartData) * 1.002;
+        const range = maxVal - minVal;
+
+        const padX = 20;
+        const padY = 30;
+        const chartW = w - padX * 2;
+        const chartH = h - padY * 2;
+
+        // grid lines
+        ctx.strokeStyle = '#1e2630';
+        ctx.lineWidth = 0.8;
+        for (let i = 0; i <= 4; i++) {
+          const y = padY + (chartH / 4) * i;
+          ctx.beginPath();
+          ctx.moveTo(padX, y);
+          ctx.lineTo(w - padX, y);
+          ctx.stroke();
+        }
+
+        // line
+        
